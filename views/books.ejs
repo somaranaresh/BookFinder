@@ -1,0 +1,23 @@
+<% include head %>
+<h1>Books</h1>
+<%- message %>
+<form type="get" class="example" action="/books">
+    <input type="text" placeholder="Search.." name="search">
+    <button type="submit"><i class="fa fa-search"></i></button>
+</form>
+<table>
+    <tr>
+        <th>Title</th><th>Author</th><th>Genre</th><th>ISBN</th><th>Image</th>
+    </tr>['title','author','isbn','genre']
+
+    <% for (var i = 0; i < books.length; i++) { %>
+    <tr>
+        <td><a href="/cover/<%= books[i].isbn %>"></a><%= books[i].title %></td>
+        <td><%= books[i].author %></td>
+        <td><%= books[i].genre %></td>
+        <td><%= books[i].isbn %></td>
+    </tr>
+    <% } %>
+</table>
+
+<% include foot %>

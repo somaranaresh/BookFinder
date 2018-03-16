@@ -1,0 +1,38 @@
+<% include head %>
+
+<div class="form-container">
+    <h2>Register</h2>
+    <%- message %>
+    <% if(locals.error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+    <form method="post" encType="multipart/form-data"  action="/books">
+        <div class="form-group">
+            <label for="title">Book Title</label>
+            <input type="text" name="name" id="title" class="form-control" value="<%= locals.title || '' %>" required />
+        </div>
+        <div class="form-group">
+            <label for="author">Author</label>
+            <input type="text" name="author" id="author" class="form-control" value="<%= locals.author || '' %>" required />
+        </div>
+        <div class="form-group">
+            <label for="genre">Genre</label>
+            <input type="text" name="genre" id="author" class="form-control" value="<%= locals.genre || '' %>" required />
+        </div>
+        <div class="form-group">
+            <label for="isbn">ISBN</label>
+            <input type="text" name="isbn" id="isbn" class="form-control" required />
+        </div>
+        <div class="form-group">
+            <label for="Cover">Upload Book Cover Image</label>
+            <input type="file" name="Cover" id="Cover" class="form-control" required />
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Add Book (formats allowed: .jpg, .png)</button>
+            <a href="/boooks" class="btn btn-link">Cancel</a>
+        </div>
+        <input type="hidden" name="username" value="<%= username%>">
+        <input type="hidden" name="role" value="<%= role%>">
+    </form>
+</div>
+<% include foot %>

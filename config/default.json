@@ -1,0 +1,14 @@
+{
+  "port":3000,//application port
+  "logger": {
+    "log_file_name": "bookFinder.log",
+    "log_file_maxsize": 100000000
+  },
+  "redis": {
+    "ip": "172.16.23.26",
+    "port": "6379"
+  },
+  "mongo": {
+    "mongourl": "mongodb://172.16.23.26:27017/BookFinder"
+  }
+}
