@@ -7,6 +7,7 @@ const http          = require('http');
 const app           = express();
 const bodyParser    = require('body-parser');
 const fileUpload    = require('express-fileupload');
+const session = require('express-session');
 
 var MongoConnections= require('./lib/MongoConnections');
 global.config       = require('config');
@@ -14,20 +15,20 @@ global.util         = require('util');
 global.mongo        = new MongoConnections({url : config.mongo.mongourl, collections : ['Users', 'Books']});
 global.redis       = require('redis').createClient({'url':'redis://'+config.redis.ip+':'+config.redis.port});
 global.logger       = require('./lib/logger');
-global.loginUserData= {};
 global.bookFinderLib = require('./lib/BookFinderLib');
 
 redis.on('error', function (err) {
     logger.error('error event - ' + config.redis.ip + ':' + config.redis.port + ' - ' + err);
 });
 mongo.connectToDB((res) => {
-    try {
-        logger.info(`At Mongo db connection response - res : ${res}`);
-        if(res == 'Connected to mongo DB' && mongo.db.system.indexes.find({'name':'titel', 'ns':'BookFinder.Books'}).count() == 0){
-            mongo.Books.createIndex({title : 'text', author : 'text', genre : 'text', isbn : 'text'});
-        }
-    } catch (err) {
-        logger.error(err.stack);
+    logger.info(`At Mongo db connection response - res : ${res}`);
+    if(res == 'Connected to mongo DB'){
+        mongo.Books.indexInformation(function (indexErr, indexRes) {
+            logger.info(`At mongo index response err :${indexErr}, res : ${indexRes}`);
+            if(!indexRes){
+                mongo.Books.createIndex({title : 'text', author : 'text', genre : 'text', isbn : 'text'});
+            }
+        });
     }
 });
 
@@ -37,29 +38,17 @@ var millisecondsTORun = 7 * 24 * 60 * 60 * 1000;/* 7 day *24 hours × 60 minutes
 * */
 setInterval(function () {
     redis.zrange(['popularBooks', 0 , -1], function (redisErr, redisRes) {
-        try{
-            logger.info(`At Server : get popular books err : ${redisErr}, res : ${util.format('%j',redisRes)}`);
-            if(redisRes){
-                mongo.Books.find({isbn : {$in : redisRes}}).toArray(function (mongoErr, mongoRes) {
-                    try{
-                        if(mongoRes.length > 0){
-                            var data = util.format('%j', mongoRes);
-                            logger.info(`At Server - get popular books mongo err : ${mongoErr}, res : ${data}`);
-                            redis.set('mostSearchedBooks',data, function (setErr, setRes) {
-                                try{
-                                    logger.info(`At Server - mostSearchedBooks update to redis from mongo ${setErr}, res : ${util.format('%j', setRes)}`);
-                                }catch (err){
-                                    logger.error(err.stack);
-                                }
-                            });
-                        }
-                    }catch (err){
-                        logger.error(err.stack);
-                    }
-                })
-            }
-        }catch (err){
-            logger.error(err.stack);
+        logger.info(`At Server : get popular books err : ${redisErr}, res : ${util.format('%j',redisRes)}`);
+        if(redisRes){
+            mongo.Books.find({isbn : {$in : redisRes}}).toArray(function (mongoErr, mongoRes) {
+                if(mongoRes.length > 0){
+                    var data = util.format('%j', mongoRes);
+                    logger.info(`At Server - get popular books mongo err : ${mongoErr}, res : ${data}`);
+                    redis.set('mostSearchedBooks',data, function (setErr, setRes) {
+                        logger.info(`At Server - mostSearchedBooks update to redis from mongo ${setErr}, res : ${util.format('%j', setRes)}`);
+                    });
+                }
+            })
         }
     })
 }, millisecondsTORun);
@@ -69,22 +58,43 @@ var users = require('./routes/Users');
 var login = require('./routes/login');
 
 app.set('view engine', 'ejs');
+app.use(session({secret: 'ssshhhhh'}));
 app.use(bodyParser.json());
 app.use(fileUpload());
 app.use(bodyParser.urlencoded({ extended: false }));
-//app.use(express.static(path.join(__dirname, 'images')));
-
-app.use('/', function(req, res, next){
-    res.redirect('/login');
-});
-app.use('/register', function(req, res, next){
+app.all('*', function (req, res, next) {
+    if(req.originalUrl != '/' &&req.originalUrl != '/login' && req.originalUrl != '/signUp' && req.originalUrl != '/users'){
+        if(req.originalUrl == '/books/addBook' && req.session.role != 'editor'){
+            return res.redirect('/books');
+        }
+        if(req.originalUrl =='/logout'){
+            req.session.destroy(function(err) {
+                if(err) {
+                    logger.error(err);
+                } else {
+                    return res.redirect('/');
+                }
+            });
+        }
+        if(req.session && req.session.name){
+            next();
+        }else{
+            return res.redirect('/');
+        }
+    }else{
+        next();
+    }
+})
+app.get('/signUp', function(req, res, next){
     return res.render('register', {
         message : ''
     });
 });
+
 app.use('/books', books);
-app.use('/users', users);
+app.use('/Users', users);
 app.use('/login', login);
+
 app.get('/cover/:name', function (req, res, next) {
 
     var options = {
@@ -105,6 +115,9 @@ app.get('/cover/:name', function (req, res, next) {
         }
     });
 
+});
+app.use('/', function(req, res, next){
+    return res.render('login', {   message : '' });
 });
 
 app.use(function(req, res, next) {
