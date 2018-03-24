@@ -1,30 +1,28 @@
 <% include head %>
 
-<div class="form-container">
-    <h2>Register</h2>
+<div class="container ">
+    <img class="mb-4" src="https://getbootstrap.com/assets/brand/bootstrap-solid.svg" alt="" width="72" height="72">
+    <h1 class="h3 mb-3 font-weight-normal">Please Sign up</h1>
     <%- message %>
     <% if(locals.error) { %>
     <div class="alert alert-danger"><%= error %></div>
     <% } %>
-    <form method="post" action="/users">
+    <form class="form-bookFinder" method="post" action="/users">
         <div class="form-group">
-            <label for="name">Name</label>
-            <input type="text" name="name" id="name" class="form-control" value="<%= locals.name || '' %>" required />
+            <input type="text" name="name" id="name" class="form-control" placeholder="Name" value="<%= locals.name || '' %>" required />
         </div>
         <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" name="username" id="username" class="form-control" value="<%= locals.username || '' %>" required />
+            <input type="text" name="username" id="username" class="form-control" placeholder="Username" value="<%= locals.username || '' %>" required />
         </div>
         <div class="form-group">
-            <label for="role">role</label>
-          <select id='role'>
-              <option value="reader" selected >Reader</option>
-              <option value="editor" >Editor</option>
-          </select>
+            <label for="role">Role</label>
+            <select id='role' name="role">
+                <option value="reader" selected >Reader</option>
+                <option value="editor" >Editor</option>
+            </select>
         </div>
         <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" name="password" id="password" class="form-control" required />
+            <input type="password" name="password" id="password" placeholder="Password" class="form-control" required />
         </div>
         <div class="form-group">
             <button type="submit" class="btn btn-primary">Register</button>
@@ -32,4 +30,4 @@
         </div>
     </form>
 </div>
-<% include foot %>
+<% include footer %>
