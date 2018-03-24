@@ -8,10 +8,13 @@ Description
 This application was created for search books, also it sugges most popular searched books.
 
 Installation
+
 Install all dependencies in package.json file. This can be done by navigating to the root directory in the command prompt/terminal/console (I will refer to it as command prompt) and running the following command:
+
+
 $ npm install
 
-Add MongoDb, RedisDb server information in config file 
+Add MongoDb, RedisDb server information in config.json file 
 
 $ npm start
 
